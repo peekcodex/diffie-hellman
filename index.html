@@ -1,0 +1,1359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Public Key Cryptography - Interactive Explorer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --neon-blue: #00f0ff;
+            --neon-purple: #a855f7;
+            --neon-pink: #ff006e;
+            --neon-green: #39ff14;
+            --dark-bg: #0a0e27;
+            --darker-bg: #050812;
+            --card-bg: rgba(15, 23, 42, 0.7);
+            --glow-intensity: 0 0 20px;
+        }
+
+        body {
+            font-family: 'Space Mono', monospace;
+            background: var(--darker-bg);
+            color: #e0e7ff;
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        /* Animated Background with Particles */
+        .particles-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .particle {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: var(--neon-blue);
+            border-radius: 50%;
+            opacity: 0.6;
+            animation: float-particle linear infinite;
+        }
+
+        @keyframes float-particle {
+            0% {
+                transform: translateY(100vh) translateX(0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.8;
+            }
+            90% {
+                opacity: 0.8;
+            }
+            100% {
+                transform: translateY(-100px) translateX(100px);
+                opacity: 0;
+            }
+        }
+
+        /* Light Beam Effects */
+        .light-beams {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+            overflow: hidden;
+        }
+
+        .beam {
+            position: absolute;
+            width: 2px;
+            height: 100%;
+            background: linear-gradient(to bottom, 
+                transparent, 
+                var(--neon-blue), 
+                transparent);
+            opacity: 0.3;
+            animation: beam-move 8s linear infinite;
+        }
+
+        @keyframes beam-move {
+            0% {
+                transform: translateX(-100px) rotate(0deg);
+                opacity: 0;
+            }
+            50% {
+                opacity: 0.3;
+            }
+            100% {
+                transform: translateX(100vw) rotate(10deg);
+                opacity: 0;
+            }
+        }
+
+        /* Custom Cursor Trail */
+        .cursor-trail {
+            position: fixed;
+            width: 30px;
+            height: 30px;
+            border: 2px solid var(--neon-purple);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            transition: all 0.15s ease;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 15px var(--neon-purple);
+        }
+
+        .cursor-glow {
+            position: fixed;
+            width: 8px;
+            height: 8px;
+            background: var(--neon-pink);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 10000;
+            transition: all 0.05s ease;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 20px var(--neon-pink);
+        }
+
+        /* Header */
+        header {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            padding: 3rem 2rem;
+            background: linear-gradient(180deg, var(--darker-bg) 0%, transparent 100%);
+            border-bottom: 2px solid var(--neon-blue);
+            box-shadow: 0 5px 30px rgba(0, 240, 255, 0.2);
+        }
+
+        .logo {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 900;
+            letter-spacing: 8px;
+            color: var(--neon-green);
+            text-transform: uppercase;
+            text-shadow: 0 0 10px var(--neon-green);
+            margin-bottom: 1rem;
+        }
+
+        h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 3rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple), var(--neon-pink));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1rem;
+            text-shadow: 0 0 30px rgba(0, 240, 255, 0.5);
+            animation: glow-pulse 3s ease-in-out infinite;
+        }
+
+        @keyframes glow-pulse {
+            0%, 100% { filter: brightness(1); }
+            50% { filter: brightness(1.3); }
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: #94a3b8;
+            letter-spacing: 2px;
+        }
+
+        /* Navigation */
+        nav {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(10, 14, 39, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(0, 240, 255, 0.2);
+            box-shadow: 0 5px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            padding: 1rem;
+        }
+
+        .nav-btn {
+            font-family: 'Orbitron', sans-serif;
+            padding: 0.8rem 1.5rem;
+            background: transparent;
+            border: 2px solid var(--neon-blue);
+            color: var(--neon-blue);
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            text-transform: uppercase;
+        }
+
+        .nav-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: var(--neon-blue);
+            transition: left 0.3s ease;
+            z-index: -1;
+        }
+
+        .nav-btn:hover::before,
+        .nav-btn.active::before {
+            left: 0;
+        }
+
+        .nav-btn:hover,
+        .nav-btn.active {
+            color: var(--darker-bg);
+            box-shadow: 0 0 20px var(--neon-blue);
+            transform: translateY(-2px);
+        }
+
+        /* Main Content */
+        main {
+            position: relative;
+            z-index: 10;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .section {
+            display: none;
+            animation: fadeInUp 0.6s ease;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Category Headers */
+        .category-header {
+            text-align: center;
+            margin: 3rem 0 2rem;
+            padding: 2rem;
+            background: linear-gradient(135deg, 
+                rgba(0, 240, 255, 0.1), 
+                rgba(168, 85, 247, 0.1));
+            border: 2px solid var(--neon-purple);
+            border-radius: 15px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .category-header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, 
+                transparent, 
+                rgba(0, 240, 255, 0.1), 
+                transparent);
+            animation: shine 3s linear infinite;
+        }
+
+        @keyframes shine {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .category-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: var(--neon-purple);
+            text-shadow: 0 0 20px var(--neon-purple);
+            position: relative;
+            z-index: 1;
+        }
+
+        .category-subtitle {
+            color: #94a3b8;
+            font-size: 1.1rem;
+            margin-top: 0.5rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Cipher Cards */
+        .cipher-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(0, 240, 255, 0.3);
+            border-radius: 20px;
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 50px rgba(0, 0, 0, 0.5),
+                        0 0 30px rgba(0, 240, 255, 0.1);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .cipher-card:hover {
+            border-color: var(--neon-blue);
+            box-shadow: 0 15px 60px rgba(0, 0, 0, 0.7),
+                        0 0 40px rgba(0, 240, 255, 0.3);
+            transform: translateY(-5px);
+        }
+
+        .cipher-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2rem;
+            font-weight: 900;
+            color: var(--neon-blue);
+            text-shadow: 0 0 15px var(--neon-blue);
+            margin-bottom: 1rem;
+        }
+
+        .cipher-description {
+            color: #cbd5e1;
+            margin-bottom: 2rem;
+            font-size: 1.05rem;
+        }
+
+        /* Input Styles */
+        input[type="number"],
+        input[type="text"],
+        textarea {
+            width: 100%;
+            padding: 1rem;
+            background: rgba(15, 23, 42, 0.9);
+            border: 2px solid rgba(0, 240, 255, 0.4);
+            border-radius: 10px;
+            color: var(--neon-blue);
+            font-family: 'Space Mono', monospace;
+            font-size: 1rem;
+            margin: 0.5rem 0;
+            transition: all 0.3s ease;
+        }
+
+        input[type="number"]:focus,
+        input[type="text"]:focus,
+        textarea:focus {
+            outline: none;
+            border-color: var(--neon-blue);
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.3);
+            background: rgba(15, 23, 42, 1);
+        }
+
+        /* Button Styles */
+        .btn {
+            font-family: 'Orbitron', sans-serif;
+            padding: 0.9rem 2rem;
+            background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple));
+            border: none;
+            border-radius: 10px;
+            color: white;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            margin: 0.5rem 0.5rem 0.5rem 0;
+            text-transform: uppercase;
+            box-shadow: 0 5px 15px rgba(0, 240, 255, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 240, 255, 0.5);
+        }
+
+        .btn:active {
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #475569, #64748b);
+            box-shadow: 0 5px 15px rgba(71, 85, 105, 0.3);
+        }
+
+        .btn-secondary:hover {
+            box-shadow: 0 8px 25px rgba(71, 85, 105, 0.5);
+        }
+
+        /* Label */
+        .label {
+            display: block;
+            color: var(--neon-green);
+            margin-top: 1.5rem;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Result Display */
+        .result-box {
+            background: linear-gradient(135deg, 
+                rgba(0, 240, 255, 0.1), 
+                rgba(168, 85, 247, 0.1));
+            border: 2px solid var(--neon-purple);
+            border-radius: 12px;
+            padding: 2rem;
+            margin: 1.5rem 0;
+            font-size: 1.3rem;
+            text-align: center;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--neon-blue);
+            font-weight: 700;
+            box-shadow: 0 0 30px rgba(168, 85, 247, 0.2);
+            word-break: break-word;
+        }
+
+        /* Process Steps */
+        .process-step {
+            background: rgba(168, 85, 247, 0.05);
+            border-left: 4px solid var(--neon-purple);
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 0 12px 12px 0;
+            backdrop-filter: blur(5px);
+        }
+
+        .step-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.3rem;
+            color: var(--neon-purple);
+            margin-bottom: 1rem;
+            font-weight: 700;
+            text-shadow: 0 0 10px var(--neon-purple);
+        }
+
+        .formula {
+            background: rgba(15, 23, 42, 0.9);
+            padding: 1.5rem;
+            border-radius: 10px;
+            font-family: 'Space Mono', monospace;
+            margin: 1rem 0;
+            text-align: center;
+            font-size: 1.15rem;
+            border: 1px solid rgba(0, 240, 255, 0.3);
+            color: var(--neon-blue);
+            overflow-x: auto;
+        }
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            background: rgba(15, 23, 42, 0.6);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 2px solid rgba(0, 240, 255, 0.3);
+        }
+
+        th, td {
+            padding: 1rem;
+            text-align: center;
+            border: 1px solid rgba(0, 240, 255, 0.2);
+        }
+
+        th {
+            background: rgba(0, 240, 255, 0.2);
+            font-weight: 700;
+            color: var(--neon-blue);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.9rem;
+        }
+
+        tr:hover {
+            background: rgba(0, 240, 255, 0.05);
+        }
+
+        /* Info Box */
+        .info-box {
+            background: rgba(57, 255, 20, 0.05);
+            border: 2px solid var(--neon-green);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .info-box strong {
+            color: var(--neon-green);
+            text-shadow: 0 0 10px var(--neon-green);
+        }
+
+        /* Warning Box */
+        .warning-box {
+            background: rgba(255, 0, 110, 0.05);
+            border: 2px solid var(--neon-pink);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .warning-box strong {
+            color: var(--neon-pink);
+            text-shadow: 0 0 10px var(--neon-pink);
+        }
+
+        /* Grid Layout for Inputs */
+        .input-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        /* Key Display */
+        .key-display {
+            background: linear-gradient(135deg, 
+                rgba(0, 240, 255, 0.15), 
+                rgba(168, 85, 247, 0.15));
+            border: 2px solid var(--neon-blue);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.1rem;
+        }
+
+        .key-label {
+            color: var(--neon-green);
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .key-value {
+            color: var(--neon-blue);
+            font-size: 1.3rem;
+            font-weight: 700;
+            text-shadow: 0 0 10px var(--neon-blue);
+        }
+
+        /* Diffie-Hellman Simulator */
+        .dh-simulator {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 2rem;
+            align-items: start;
+            margin: 2rem 0;
+        }
+
+        .participant {
+            background: rgba(15, 23, 42, 0.7);
+            border: 2px solid var(--neon-purple);
+            border-radius: 15px;
+            padding: 2rem;
+        }
+
+        .participant-name {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            color: var(--neon-purple);
+            text-align: center;
+            margin-bottom: 1.5rem;
+            text-shadow: 0 0 15px var(--neon-purple);
+        }
+
+        .channel {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .channel-label {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--neon-green);
+            text-align: center;
+            padding: 1rem;
+            background: rgba(57, 255, 20, 0.1);
+            border: 2px solid var(--neon-green);
+            border-radius: 10px;
+            text-shadow: 0 0 10px var(--neon-green);
+        }
+
+        .arrow {
+            font-size: 2rem;
+            color: var(--neon-blue);
+            text-shadow: 0 0 20px var(--neon-blue);
+            animation: pulse-arrow 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse-arrow {
+            0%, 100% { transform: scale(1); opacity: 0.7; }
+            50% { transform: scale(1.2); opacity: 1; }
+        }
+
+        /* Calculation Display */
+        .calc-step {
+            background: rgba(0, 240, 255, 0.05);
+            border-left: 3px solid var(--neon-blue);
+            padding: 1rem;
+            margin: 0.5rem 0;
+            border-radius: 0 8px 8px 0;
+            font-family: 'Space Mono', monospace;
+        }
+
+        /* Highlight */
+        .highlight {
+            color: var(--neon-pink);
+            font-weight: 700;
+            text-shadow: 0 0 10px var(--neon-pink);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            h1 { font-size: 2rem; }
+            .category-title { font-size: 1.8rem; }
+            .cipher-title { font-size: 1.5rem; }
+            .nav-container { justify-content: center; }
+            .input-grid { grid-template-columns: 1fr; }
+            .dh-simulator {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            .channel { display: none; }
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(0, 240, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--neon-blue);
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Cursor Effects -->
+    <div class="cursor-trail"></div>
+    <div class="cursor-glow"></div>
+
+    <!-- Particle Background -->
+    <div class="particles-container" id="particlesContainer"></div>
+
+    <!-- Light Beams -->
+    <div class="light-beams" id="lightBeams"></div>
+
+    <!-- Header -->
+    <header>
+        <div class="logo">CRYPTOGRAPHY LAB</div>
+        <h1>DIFFIE-HELLMAN</h1>
+        <p class="subtitle">Interactive Asymmetric Encryption Explorer</p>
+    </header>
+
+    <!-- Navigation -->
+    <nav>
+        <div class="nav-container">
+            <!-- <button class="nav-btn active" onclick="showSection('overview')">Overview</button> -->
+            <!-- <button class="nav-btn" onclick="showSection('rsa')">RSA</button> -->
+            <button class="nav-btn" onclick="showSection('diffie-hellman')">Click Here</button>
+            <!-- <button class="nav-btn" onclick="showSection('ecc')">ECC & DSS</button> -->
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main>
+    
+
+        <!-- DIFFIE-HELLMAN SECTION -->
+        <div id="diffie-hellman" class="section">
+            <div class="category-header">
+                <h2 class="category-title">Diffie-Hellman Key Exchange</h2>
+                <p class="category-subtitle">Creating Shared Secrets Over Public Channels</p>
+            </div>
+
+            <div class="cipher-card">
+                <h2 class="cipher-title">The Challenge</h2>
+                <p class="cipher-description">
+                    How can Alice and Bob create a shared secret key when a hacker is listening to everything they say? 
+                    The answer: <strong class="highlight">Diffie-Hellman</strong>, based on the difficulty of solving discrete logarithms.
+                </p>
+
+                <div class="process-step">
+                    <div class="step-title">The Protocol</div>
+                    <ol style="padding-left: 1.5rem; line-height: 2;">
+                        <li><strong>Public Agreement:</strong> Alice and Bob publicly agree on a large prime number (q) and a primitive root (α)</li>
+                        <li><strong>Private Keys:</strong> Alice chooses secret X<sub>A</sub>, Bob chooses secret X<sub>B</sub></li>
+                        <li><strong>Public Keys:</strong> Alice computes Y<sub>A</sub> = α<sup>X<sub>A</sub></sup> mod q and sends it publicly. Bob does the same with Y<sub>B</sub></li>
+                        <li><strong>Shared Secret:</strong> Both compute K using the other's public key and their own private key. Amazingly, they get the same K!</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="cipher-card">
+                <h2 class="cipher-title">🎮 Interactive Diffie-Hellman Simulator</h2>
+                
+                <div class="info-box">
+                    <strong>Public Channel (Everyone Can See):</strong>
+                    <div style="margin-top: 1rem;">
+                        <label class="label">Prime Number (q):</label>
+                        <input type="number" id="dh_q" value="23" min="2">
+                        
+                        <label class="label">Base / Primitive Root (α):</label>
+                        <input type="number" id="dh_alpha" value="5" min="2">
+                    </div>
+                </div>
+
+                <div class="dh-simulator">
+                    <!-- Alice -->
+                    <div class="participant">
+                        <div class="participant-name">👩 ALICE</div>
+                        
+                        <label class="label">Alice's Private Secret (X<sub>A</sub>):</label>
+                        <input type="number" id="dh_xa" value="4" min="1">
+                        
+                        <div id="alicePublic"></div>
+                        <div id="aliceReceived"></div>
+                        <div id="aliceSecret"></div>
+                    </div>
+
+                    <!-- Channel -->
+                    <div class="channel">
+                        <div class="channel-label">PUBLIC<br>CHANNEL</div>
+                        <div class="arrow">→</div>
+                        <div class="arrow">←</div>
+                    </div>
+
+                    <!-- Bob -->
+                    <div class="participant">
+                        <div class="participant-name">👨 BOB</div>
+                        
+                        <label class="label">Bob's Private Secret (X<sub>B</sub>):</label>
+                        <input type="number" id="dh_xb" value="3" min="1">
+                        
+                        <div id="bobPublic"></div>
+                        <div id="bobReceived"></div>
+                        <div id="bobSecret"></div>
+                    </div>
+                </div>
+
+                <div style="text-align: center; margin-top: 2rem;">
+                    <button class="btn" onclick="diffieHellmanExchange()">🔄 Perform Key Exchange</button>
+                    <button class="btn btn-secondary" onclick="clearDH()">Clear</button>
+                </div>
+
+                <div id="dhProcess"></div>
+            </div>
+        </div>
+
+            <!-- div class="cipher-card">
+                <h2 class="cipher-title">Digital Signature Standard (DSS)</h2>
+                <p class="cipher-description">
+                    DSS provides authentication and non-repudiation. It proves that a message came from a specific sender and hasn't been altered.
+                </p>
+
+                <div class="process-step">
+                    <div class="step-title">ECDSA Signing Process</div>
+                    
+                    <div class="calc-step">
+                   <     <strong>Step 1:</strong> Hash the message: e = HASH(m)
+                    </div>
+                    
+                    <div class="calc-step">
+                        <strong>Step 2:</strong> Generate random number k
+                    </div>
+                    
+                    <div class="calc-step">
+                        <strong>Step 3:</strong> Calculate point (x₁, y₁) = k × G
+                    </div>
+                    
+                    <div class="calc-step">
+                        <strong>Step 4:</strong> Compute r = x₁ mod n
+                    </div>
+                    
+                    <div class="calc-step">
+                        <strong>Step 5:</strong> Compute s = k⁻¹(e + d×r) mod n
+                    </div>
+                    
+                    <div class="calc-step">
+                        <strong>Signature:</strong> (r, s)
+                    </div>
+                </div>
+
+                <div class="process-step">
+                    <div class="step-title">ECDSA Verification Process</div>
+                    
+                    <div class="calc-step">
+                        <strong>Step 1:</strong> Hash the message: e = HASH(m)
+                    </div>
+                    
+                    <div class="calc-step">
+                        <strong>Step 2:</strong> Compute w = s⁻¹ mod n
+                    </div>
+                    
+                    <div class="calc-step">
+                        <strong>Step 3:</strong> Compute u₁ = e×w mod n and u₂ = r×w mod n
+                    </div>
+                    
+                    <div class="calc-step">
+                        <strong>Step 4:</strong> Compute point (x₁, y₁) = u₁×G + u₂×Q
+                    </div>
+                    
+                    <div class="calc-step">
+                        <strong>Verification:</strong> Signature is valid if r = x₁ mod n
+                    </div>
+                </div>
+
+                <div class="warning-box">
+                    <strong>⚠️ Critical Security Rule:</strong> The random number k must be unique for every signature. 
+                    Reusing k even once allows attackers to recover your private key!
+                </div>
+            </div>
+
+            <div class="cipher-card">
+                <h2 class="cipher-title">Simple ECC Example</h2>
+                <p class="cipher-description">Let's see a basic example with small numbers (real ECC uses massive numbers).</p>
+                
+                <label class="label">Choose a small prime p:</label>
+                <input type="number" id="ecc_p" value="23" min="2">
+
+                <label class="label">Curve parameter a:</label>
+                <input type="number" id="ecc_a" value="1" min="0">
+
+                <label class="label">Curve parameter b:</label>
+                <input type="number" id="ecc_b" value="1" min="0">
+
+                <label class="label">Base point G_x:</label>
+                <input type="number" id="ecc_gx" value="3" min="0">
+
+                <label class="label">Base point G_y:</label>
+                <input type="number" id="ecc_gy" value="10" min="0">
+
+                <label class="label">Private key d:</label>
+                <input type="number" id="ecc_d" value="7" min="1">
+
+                <button class="btn" onclick="eccCalculate()">Calculate Public Key</button>
+                <button class="btn btn-secondary" onclick="clearECC()">Clear</button>
+
+                <div id="eccProcess"></div>
+            </div> -->
+        </div>
+    </main>
+
+    <script>
+        // ============================================
+        // INITIALIZATION & UI EFFECTS
+        // ============================================
+
+        // Custom Cursor
+        const cursorTrail = document.querySelector('.cursor-trail');
+        const cursorGlow = document.querySelector('.cursor-glow');
+        
+        document.addEventListener('mousemove', (e) => {
+            cursorGlow.style.left = e.clientX + 'px';
+            cursorGlow.style.top = e.clientY + 'px';
+            
+            setTimeout(() => {
+                cursorTrail.style.left = e.clientX + 'px';
+                cursorTrail.style.top = e.clientY + 'px';
+            }, 50);
+        });
+
+        // Generate Particles
+        function createParticles() {
+            const container = document.getElementById('particlesContainer');
+            const particleCount = 50;
+            
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDuration = (Math.random() * 15 + 10) + 's';
+                particle.style.animationDelay = Math.random() * 5 + 's';
+                
+                container.appendChild(particle);
+            }
+        }
+
+        // Generate Light Beams
+        function createLightBeams() {
+            const container = document.getElementById('lightBeams');
+            const beamCount = 8;
+            
+            for (let i = 0; i < beamCount; i++) {
+                const beam = document.createElement('div');
+                beam.className = 'beam';
+                
+                beam.style.left = (i * 15) + '%';
+                beam.style.animationDelay = (i * 1) + 's';
+                
+                container.appendChild(beam);
+            }
+        }
+
+        // Navigation
+        function showSection(sectionId) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            
+            document.getElementById(sectionId).classList.add('active');
+            event.target.classList.add('active');
+            
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // ============================================
+        // RSA ALGORITHM
+        // ============================================
+
+        let rsaKeys = {};
+
+        function isPrime(num) {
+            if (num <= 1) return false;
+            if (num <= 3) return true;
+            if (num % 2 === 0 || num % 3 === 0) return false;
+            
+            for (let i = 5; i * i <= num; i += 6) {
+                if (num % i === 0 || num % (i + 2) === 0) return false;
+            }
+            return true;
+        }
+
+        function gcd(a, b) {
+            while (b !== 0) {
+                [a, b] = [b, a % b];
+            }
+            return a;
+        }
+
+        function modInverse(e, phi) {
+            let m0 = phi, t, q;
+            let x0 = 0, x1 = 1;
+            
+            if (phi === 1) return 0;
+            
+            while (e > 1) {
+                q = Math.floor(e / phi);
+                t = phi;
+                phi = e % phi;
+                e = t;
+                t = x0;
+                x0 = x1 - q * x0;
+                x1 = t;
+            }
+            
+            if (x1 < 0) x1 += m0;
+            return x1;
+        }
+
+        function modPow(base, exp, mod) {
+            let result = 1;
+            base = base % mod;
+            
+            while (exp > 0) {
+                if (exp % 2 === 1) {
+                    result = (result * base) % mod;
+                }
+                exp = Math.floor(exp / 2);
+                base = (base * base) % mod;
+            }
+            return result;
+        }
+
+        function rsaGenerateKeys() {
+            const p = parseInt(document.getElementById('rsa_p').value);
+            const q = parseInt(document.getElementById('rsa_q').value);
+            
+            if (!isPrime(p) || !isPrime(q)) {
+                alert('Both p and q must be prime numbers!');
+                return;
+            }
+            
+            if (p === q) {
+                alert('p and q must be different!');
+                return;
+            }
+
+            let html = '<div class="process-step">';
+            html += '<div class="step-title">Step 2.1: Calculate n (RSA Modulus)</div>';
+            html += '<div class="formula">n = p × q</div>';
+            
+            const n = p * q;
+            html += `<div class="calc-step">n = ${p} × ${q} = ${n}</div>`;
+            html += `<p>This means a key length of ${Math.ceil(Math.log2(n))} bits.</p>`;
+            html += '</div>';
+
+            // Calculate phi
+            html += '<div class="process-step">';
+            html += '<div class="step-title">Step 2.2: Calculate φ(n) - Euler\'s Totient</div>';
+            html += '<p>φ(n) calculates how many numbers ≤ n are coprime to n.</p>';
+            html += '<div class="formula">φ(n) = (p - 1) × (q - 1)</div>';
+            
+            const phi = (p - 1) * (q - 1);
+            html += `<div class="calc-step">φ(${n}) = (${p} - 1) × (${q} - 1) = ${p-1} × ${q-1} = ${phi}</div>`;
+            html += '</div>';
+
+            // Choose e
+            html += '<div class="process-step">';
+            html += '<div class="step-title">Step 2.3: Choose e (Encryption Exponent)</div>';
+            html += '<p>e must be coprime to φ(n). Common choice: 17, 65537, or any number where gcd(e, φ(n)) = 1</p>';
+            
+            let e = 17;
+            // Find a valid e if 17 doesn't work
+            while (gcd(e, phi) !== 1 && e < phi) {
+                e++;
+            }
+            
+            html += `<div class="calc-step">e = ${e}</div>`;
+            html += `<div class="calc-step">gcd(${e}, ${phi}) = ${gcd(e, phi)} ✓</div>`;
+            html += '</div>';
+
+            // Calculate d
+            html += '<div class="process-step">';
+            html += '<div class="step-title">Step 2.4: Calculate d (Decryption Exponent)</div>';
+            html += '<p>d is the multiplicative inverse of e modulo φ(n).</p>';
+            html += '<div class="formula">(e × d) mod φ(n) = 1</div>';
+            
+            const d = modInverse(e, phi);
+            html += `<div class="calc-step">d = ${d}</div>`;
+            html += `<div class="calc-step">Verification: (${e} × ${d}) mod ${phi} = ${(e * d) % phi} ✓</div>`;
+            html += '</div>';
+
+            // Display keys
+            html += '<div class="process-step">';
+            html += '<div class="step-title">⇒ Resulting Keys</div>';
+            html += `<div class="key-display">
+                        <div class="key-label">🔐 Private Key</div>
+                        <div class="key-value">(n, d) = (${n}, ${d})</div>
+                    </div>`;
+            html += `<div class="key-display">
+                        <div class="key-label">🔓 Public Key</div>
+                        <div class="key-value">(n, e) = (${n}, ${e})</div>
+                    </div>`;
+            html += '</div>';
+
+            document.getElementById('rsaKeyGeneration').innerHTML = html;
+            
+            // Store keys
+            rsaKeys = { n, e, d, p, q };
+            
+            // Show encrypt/decrypt cards
+            document.getElementById('rsaEncryptCard').style.display = 'block';
+            document.getElementById('rsaDecryptCard').style.display = 'block';
+        }
+
+        function rsaEncrypt() {
+            if (!rsaKeys.n) {
+                alert('Please generate keys first!');
+                return;
+            }
+
+            const m = parseInt(document.getElementById('rsaMessage').value);
+            
+            if (isNaN(m) || m < 0 || m >= rsaKeys.n) {
+                alert(`Message must be a number between 0 and ${rsaKeys.n - 1}!`);
+                return;
+            }
+
+            let html = '<div class="process-step">';
+            html += '<div class="step-title">Encryption Process</div>';
+            html += '<div class="formula">C = M<sup>e</sup> mod n</div>';
+            
+            const c = modPow(m, rsaKeys.e, rsaKeys.n);
+            
+            html += `<div class="calc-step">M = ${m}</div>`;
+            html += `<div class="calc-step">C = ${m}<sup>${rsaKeys.e}</sup> mod ${rsaKeys.n}</div>`;
+            html += `<div class="calc-step">C = ${c}</div>`;
+            
+            // ASCII representation
+            if (m >= 32 && m <= 126) {
+                html += `<p style="margin-top: 1rem;">ASCII: M = "${String.fromCharCode(m)}"</p>`;
+            }
+            if (c >= 32 && c <= 126) {
+                html += `<p>ASCII: C = "${String.fromCharCode(c)}"</p>`;
+            }
+            
+            html += `<div class="result-box">Ciphertext: ${c}</div>`;
+            html += '</div>';
+
+            document.getElementById('rsaEncryptProcess').innerHTML = html;
+            
+            // Auto-fill decrypt field
+            document.getElementById('rsaCiphertext').value = c;
+        }
+
+        function rsaDecrypt() {
+            if (!rsaKeys.n) {
+                alert('Please generate keys first!');
+                return;
+            }
+
+            const c = parseInt(document.getElementById('rsaCiphertext').value);
+            
+            if (isNaN(c) || c < 0 || c >= rsaKeys.n) {
+                alert(`Ciphertext must be a number between 0 and ${rsaKeys.n - 1}!`);
+                return;
+            }
+
+            let html = '<div class="process-step">';
+            html += '<div class="step-title">Decryption Process</div>';
+            html += '<div class="formula">M\' = C<sup>d</sup> mod n</div>';
+            
+            const m = modPow(c, rsaKeys.d, rsaKeys.n);
+            
+            html += `<div class="calc-step">C = ${c}</div>`;
+            html += `<div class="calc-step">M' = ${c}<sup>${rsaKeys.d}</sup> mod ${rsaKeys.n}</div>`;
+            html += `<div class="calc-step">M' = ${m}</div>`;
+            
+            // ASCII representation
+            if (c >= 32 && c <= 126) {
+                html += `<p style="margin-top: 1rem;">ASCII: C = "${String.fromCharCode(c)}"</p>`;
+            }
+            if (m >= 32 && m <= 126) {
+                html += `<p>ASCII: M' = "${String.fromCharCode(m)}"</p>`;
+            }
+            
+            html += `<div class="result-box">Recovered Plaintext: ${m}</div>`;
+            html += '</div>';
+
+            document.getElementById('rsaDecryptProcess').innerHTML = html;
+        }
+
+        function clearRSA() {
+            document.getElementById('rsaKeyGeneration').innerHTML = '';
+            document.getElementById('rsaEncryptProcess').innerHTML = '';
+            document.getElementById('rsaDecryptProcess').innerHTML = '';
+            document.getElementById('rsaMessage').value = '';
+            document.getElementById('rsaCiphertext').value = '';
+            document.getElementById('rsaEncryptCard').style.display = 'none';
+            document.getElementById('rsaDecryptCard').style.display = 'none';
+            rsaKeys = {};
+        }
+
+        // ============================================
+        // DIFFIE-HELLMAN
+        // ============================================
+
+        function diffieHellmanExchange() {
+            const q = parseInt(document.getElementById('dh_q').value);
+            const alpha = parseInt(document.getElementById('dh_alpha').value);
+            const xa = parseInt(document.getElementById('dh_xa').value);
+            const xb = parseInt(document.getElementById('dh_xb').value);
+
+            if (!isPrime(q)) {
+                alert('q must be a prime number!');
+                return;
+            }
+
+            // Alice computes her public key
+            const ya = modPow(alpha, xa, q);
+            
+            let aliceHTML = `<div class="calc-step">
+                <strong>Alice Computes Public Key:</strong><br>
+                Y<sub>A</sub> = α<sup>X<sub>A</sub></sup> mod q<br>
+                Y<sub>A</sub> = ${alpha}<sup>${xa}</sup> mod ${q} = <span class="highlight">${ya}</span>
+            </div>`;
+            aliceHTML += `<div class="info-box" style="margin-top: 1rem;">
+                <strong>Sends to Bob: ${ya} →</strong>
+            </div>`;
+            
+            document.getElementById('alicePublic').innerHTML = aliceHTML;
+
+            // Bob computes his public key
+            const yb = modPow(alpha, xb, q);
+            
+            let bobHTML = `<div class="calc-step">
+                <strong>Bob Computes Public Key:</strong><br>
+                Y<sub>B</sub> = α<sup>X<sub>B</sub></sup> mod q<br>
+                Y<sub>B</sub> = ${alpha}<sup>${xb}</sup> mod ${q} = <span class="highlight">${yb}</span>
+            </div>`;
+            bobHTML += `<div class="info-box" style="margin-top: 1rem;">
+                <strong>← Sends to Alice: ${yb}</strong>
+            </div>`;
+            
+            document.getElementById('bobPublic').innerHTML = bobHTML;
+
+            // Alice receives Bob's public key and computes shared secret
+            const ka = modPow(yb, xa, q);
+            
+            let aliceSecretHTML = `<div class="calc-step" style="margin-top: 1rem;">
+                <strong>Receives Bob's Public Key: ${yb}</strong>
+            </div>`;
+            aliceSecretHTML += `<div class="calc-step">
+                <strong>Alice Computes Shared Secret:</strong><br>
+                K = (Y<sub>B</sub>)<sup>X<sub>A</sub></sup> mod q<br>
+                K = ${yb}<sup>${xa}</sup> mod ${q} = <span class="highlight">${ka}</span>
+            </div>`;
+            aliceSecretHTML += `<div class="result-box" style="margin-top: 1rem;">
+                Shared Secret: ${ka}
+            </div>`;
+            
+            document.getElementById('aliceSecret').innerHTML = aliceSecretHTML;
+
+            // Bob receives Alice's public key and computes shared secret
+            const kb = modPow(ya, xb, q);
+            
+            let bobSecretHTML = `<div class="calc-step" style="margin-top: 1rem;">
+                <strong>Receives Alice's Public Key: ${ya}</strong>
+            </div>`;
+            bobSecretHTML += `<div class="calc-step">
+                <strong>Bob Computes Shared Secret:</strong><br>
+                K = (Y<sub>A</sub>)<sup>X<sub>B</sub></sup> mod q<br>
+                K = ${ya}<sup>${xb}</sup> mod ${q} = <span class="highlight">${kb}</span>
+            </div>`;
+            bobSecretHTML += `<div class="result-box" style="margin-top: 1rem;">
+                Shared Secret: ${kb}
+            </div>`;
+            
+            document.getElementById('bobSecret').innerHTML = bobSecretHTML;
+
+            // Show process summary
+            let processHTML = '<div class="process-step">';
+            processHTML += '<div class="step-title">🎉 Success! Both Have the Same Secret</div>';
+            
+            if (ka === kb) {
+                processHTML += `<div class="result-box">
+                    Both Alice and Bob now share the secret key: <span class="highlight">${ka}</span><br>
+                    They can use this to encrypt their future communications!
+                </div>`;
+                
+                processHTML += '<div class="info-box" style="margin-top: 1.5rem;">';
+                processHTML += '<strong>The Magic:</strong><br>';
+                processHTML += 'Even though a hacker can see q, α, Y<sub>A</sub>, and Y<sub>B</sub>, ';
+                processHTML += 'they cannot compute K without knowing X<sub>A</sub> or X<sub>B</sub>!<br><br>';
+                processHTML += 'This is because solving the discrete logarithm problem ';
+                processHTML += '(finding X<sub>A</sub> from Y<sub>A</sub> = α<sup>X<sub>A</sub></sup> mod q) is computationally impossible for large numbers.';
+                processHTML += '</div>';
+            } else {
+                processHTML += `<div class="warning-box">
+                    Error: Alice got ${ka} but Bob got ${kb}. Something went wrong!
+                </div>`;
+            }
+            
+            processHTML += '</div>';
+            
+            document.getElementById('dhProcess').innerHTML = processHTML;
+        }
+
+        function clearDH() {
+            document.getElementById('alicePublic').innerHTML = '';
+            document.getElementById('aliceReceived').innerHTML = '';
+            document.getElementById('aliceSecret').innerHTML = '';
+            document.getElementById('bobPublic').innerHTML = '';
+            document.getElementById('bobReceived').innerHTML = '';
+            document.getElementById('bobSecret').innerHTML = '';
+            document.getElementById('dhProcess').innerHTML = '';
+        }
+
+        // ============================================
+        // ECC (Simplified Example)
+        // ============================================
+
+        function eccCalculate() {
+            const p = parseInt(document.getElementById('ecc_p').value);
+            const a = parseInt(document.getElementById('ecc_a').value);
+            const b = parseInt(document.getElementById('ecc_b').value);
+            const gx = parseInt(document.getElementById('ecc_gx').value);
+            const gy = parseInt(document.getElementById('ecc_gy').value);
+            const d = parseInt(document.getElementById('ecc_d').value);
+
+            let html = '<div class="process-step">';
+            html += '<div class="step-title">Elliptic Curve Definition</div>';
+            html += `<div class="formula">y² = x³ + ${a}x + ${b} (mod ${p})</div>`;
+            html += '</div>';
+
+            html += '<div class="process-step">';
+            html += '<div class="step-title">Domain Parameters</div>';
+            html += `<div class="calc-step">Prime modulus: p = ${p}</div>`;
+            html += `<div class="calc-step">Curve parameters: a = ${a}, b = ${b}</div>`;
+            html += `<div class="calc-step">Base generator point: G = (${gx}, ${gy})</div>`;
+            html += '</div>';
+
+            html += '<div class="process-step">';
+            html += '<div class="step-title">Key Generation</div>';
+            html += `<div class="calc-step">Private key: d = ${d}</div>`;
+            html += `<div class="calc-step">Public key: Q = d × G</div>`;
+            html += '<div class="info-box" style="margin-top: 1rem;">';
+            html += '<strong>Note:</strong> In real ECC, point multiplication is complex. ';
+            html += 'For demonstration purposes with small numbers, the actual point calculation ';
+            html += 'requires repeated point addition using the elliptic curve group law.';
+            html += '</div>';
+            html += `<div class="result-box">
+                Private Key: ${d}<br>
+                Public Key: Q = ${d} × (${gx}, ${gy})
+            </div>`;
+            html += '</div>';
+
+            html += '<div class="warning-box">';
+            html += '<strong>Security Principle:</strong><br>';
+            html += 'Given Q and G, finding d is the <strong class="highlight">Elliptic Curve Discrete Logarithm Problem (ECDLP)</strong>, ';
+            html += 'which is computationally infeasible for properly chosen large parameters.';
+            html += '</div>';
+
+            document.getElementById('eccProcess').innerHTML = html;
+        }
+
+        function clearECC() {
+            document.getElementById('eccProcess').innerHTML = '';
+        }
+
+        // ============================================
+        // INITIALIZE ON LOAD
+        // ============================================
+
+        window.onload = function() {
+            createParticles();
+            createLightBeams();
+        };
+    </script>
+</body>
+</html>
